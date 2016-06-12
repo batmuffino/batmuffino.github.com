@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title> Bayesian win probabilities for Hearthstone</title>
+    </head>
+
+    <script>
+            var classes = ['Warrior','Mage','Priest','Paladin','Shaman','Rogue','Warlock','Druid','Hunter'];
+ var g = 7;
+     var C = [0.99999999999980993, 676.5203681218851, -1259.1392167224028,771.32342877765313, -176.61502916214059, 12.507343278686905, -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7];
+     var alpha=10;
+     var beta=10;
+
+     function expectedPosterior(wins,losses) {
+         return((alpha+wins)/(alpha+beta+wins+losses));
+     }
+     function variancePosterior(wins,losses) {
+         return((alpha+wins)*(beta+wins+losses-wins)/((alpha+beta+wins+losses)*(alpha+beta+wins+losses)*(alpha+beta+wins+losses+1)))
+     }
+function gamma(z) {
+
+    if (z < 0.5) return Math.PI / (Math.sin(Math.PI * z) * gamma(1 - z));
+    else {
+        z -= 1;
+
+        var x = C[0];
+        for (var i = 1; i < g + 2; i++)
+        x += C[i] / (z + i);
+
+        var t = z + g + 0.5;
+        return Math.sqrt(2 * Math.PI) * Math.pow(t, (z + 0.5)) * Math.exp(-t) * x;
+    }
+     }
+     function B(alpha,beta) {
+         return(gamma(alpha)*gamma(beta)/gamma(alpha+beta));
+     }
+     function Bdens(theta,alpha,beta) {
+         return(1/B(alpha,beta)*Math.pow(theta,alpha-1)*Math.pow(1-theta,beta-1))
+     }
+     function createTable() {
+            var nrow = document.getElementById('archetypes').value;
+            var ncol = 2;
+            var theader= '<table border="1">\n';
+            var tbody = '';
+
+
+                for( var i = 0; i<nrow; i++) {
+                    tbody+="<tr>";
+
+                    for (var j = 0; j < ncol; j++) {
+                        tbody+= "<td>";
+                        tbody+= "Winrate " + i + ',' +j;
+                        tbody+= "</td>";
+
+                    } 
+                    tbody+="</tr>\n";
+
+
+                }
+            var tfooter = '</table>';
+            document.getElementById('wrapper').innerHTML = theader+tbody+tfooter;
+
+        }
+     function createOutputTable() {
+            var nrow = document.getElementById('archetypes').value;
+            var ncol = 2;
+            var theader= '<table border="1">\n';
+         var tbody = '';
+         var probs = [];
+         var vars = [];
+            tbody+="<tr>";
+            tbody+="<td>Class</td>"
+            tbody+="<td>Winrate</td>"
+            tbody+="<td>Standard Deviation</td>"
+            tbody+="</tr>\n";
+
+
+                for( var i = 0; i<nrow; i++) {
+                    tbody+="<tr>";
+                        tbody+= "<td>";
+                        tbody+= classes[i];
+                        tbody+= "</td>";
+
+                        tbody+= "<td>";
+                        var win = parseInt(document.getElementById("input"+i+"0").value);
+                    var loss = parseInt(document.getElementById("input"+i+"1").value);
+                    tbody+=expectedPosterior(win,loss);
+                    probs.push(expectedPosterior(win,loss));
+                        tbody+= "</td>";
+                    tbody+= "<td>";
+                    tbody+=Math.sqrt(variancePosterior(win,loss));
+                    vars.push((variancePosterior(win,loss)));
+                        tbody+= "</td>";
+
+                    tbody+="</tr>\n";
+
+
+                }
+         tbody+="<tr>";
+                        tbody+= "<td>";
+                        tbody+= "Overall";
+                        tbody+= "</td>";
+         tbody+="<td>"
+         var wmean = 0;
+         var svars =0;
+         for(var i = 0; i < probs.length; i++) {
+             wmean += 1/vars[i] * probs[i];
+             svars += 1/vars[i];
+         }
+         wmean = wmean / svars;
+         tbody+=wmean;
+         tbody+="</td>"
+         tbody+="<td>"
+tbody+=Math.sqrt(1/svars);
+         tbody+="</td>"
+                    tbody+="</tr>\n";
+            var tfooter = '</table>';
+            document.getElementById('outwrapper').innerHTML = theader+tbody+tfooter;
+
+        }
+        function createInputTable() {
+            var nrow = document.getElementById('archetypes').value;
+            var ncol = 3;
+            var theader= '<table border="1">\n';
+            var tbody = '';
+
+            tbody+="<tr>";
+            tbody+="<td>Number of Wins</td>"
+            tbody+="<td>Number of Wins</td>"
+            tbody+="</tr>\n";
+
+                for( var i = 0; i<nrow; i++) {
+                    tbody+="<tr>";
+
+                    for (var j = 0; j < ncol; j++) {
+                        tbody+= "<td>";
+                        tbody+= "<input id=input"+i+j+" type=\"text\">" 
+                        tbody+= "</td>";
+
+                    } 
+                    tbody+="</tr>\n";
+
+
+                }
+            var tfooter = '</table>';
+            document.getElementById('wrapper').innerHTML = theader+tbody+tfooter;
+
+        }
+        function createStandardInputTable() {
+            var nrow = document.getElementById('archetypes').value;
+            /* var nrow = 9;*/
+            var ncol = 2;
+            var theader= '<table border="1">\n';
+            var tbody = '';
+
+            tbody+="<tr>";
+            tbody+="<td>Class</td>"
+            tbody+="<td>Number of Wins</td>"
+            tbody+="<td>Number of Losses</td>"
+            tbody+="</tr>\n";
+
+                for( var i = 0; i<nrow; i++) {
+                    tbody+="<tr>";
+                    /* tbody+="<td>" + classes[i] + "</td>";*/
+                        tbody+= "<td>";
+                        tbody+= "<input id=input"+i+j+" type=\"text\" value=\""+classes[i]+"\">" 
+                        tbody+= "</td>";
+
+                    for (var j = 0; j < ncol; j++) {
+                        tbody+= "<td>";
+                        tbody+= "<input id=input"+i+j+" type=\"text\" value=\"0\">" 
+                        tbody+= "</td>";
+
+                    } 
+                    tbody+="</tr>\n";
+
+
+                }
+            var tfooter = '</table>';
+            document.getElementById('wrapper').innerHTML = theader+tbody+tfooter;
+
+        }
+    </script>
+
+    <body>
+        <h1>
+            Probabilty Calculation
+        </h1>
+        <h2>
+            Archetypes
+        </h2>
+        <form name ="inputTable">
+        <label> Archetypes: <input type="text" name="archetypes" id="archetypes" value="9"></label>
+        <!-- <input name="generate"  type="button"  value ="Create Table"  onclick="createInputTable()"> -->
+        <input name="generate standard"  type="button"  value ="Create Standard Table"  onclick="createStandardInputTable()">
+        <input name="calculate winrate"  type="button"  value ="Calculate Winrates"  onclick="createOutputTable()">
+        </form>
+        <div id="wrapper"></div>
+        <div id="outwrapper"></div>
+    </body>
+</html>

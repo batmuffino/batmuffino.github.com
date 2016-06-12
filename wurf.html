@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width">
+        <title>Wurfrechner</title>
+    </head>
+    <script type="text/javascript" charset="utf-8">
+function calc() {
+    var result ="";
+    v0=parseFloat(document.getElementById('v0').value);
+    beta=parseFloat(document.getElementById('beta').value);
+    g=parseFloat(document.getElementById('g').value);
+
+    result = v0*v0/g*Math.sin(2*beta*Math.PI/180.0);
+    document.getElementById('result').innerHTML=result;
+} 
+    </script>
+    <body>
+        Reichweiche von schiefen Wurf
+        <form name = "input">
+            <label> Wurfgeschwindigkeit v0<input type="text" name="v0" id="v0" value="21.96041"></label>
+            <label> Wurfwinkel Beta in Grad<input type="text" name="beta" id="beta" value="15"></label>
+            <label> Gravitationkonstante g<input type="text" name="g" id="g" value="9.81"></label>
+            <input name="Berechne Wurfweite" type="button" value="calc" onclick="calc()">
+        </form>
+        <div id="result">
+    </body>
+</html>
